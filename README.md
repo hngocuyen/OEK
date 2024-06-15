@@ -117,7 +117,7 @@ hello world
 Bạn thấy không , thực sự nó rất là hay , cực kì hay , đó là những bước cơ bản đầu tiên để hiểu về obf và deobf
 Giải thích sâu xa hơn thì tất cả mọi hàm có sẵn ở python thì đều có thể bị hook kể cả input hay print int float chr vân vân miễn là thuộc builtins
 Vì lý do như vậy chúng ta có thể bảo mật bằng cách tự write một cái hàm mới cho mấy cái này để tránh hooking nhưng mình nghĩ cái đó để sau vì mang tính nâng cao rồi 
-
+## PYTHON BYTECODE
 Trong Python, marshal là một mô-đun chuẩn được sử dụng để tuần tự hóa và giải tuần tự hóa các đối tượng Python. marshal thường được sử dụng bên trong Python để lưu trữ các đối tượng biên dịch như mã bytecode của Python, thường trong các tệp .pyc hoặc
 
 Với marshal thì hắn cũng dùng exec nhưng chúng ta không thể hooking ra code được bởi vì nó không phải string mà là bytecode, cách chúng ta có thể dịch nó là dựa vào module dis
@@ -171,7 +171,7 @@ Chỉ một dòng `print('hello')` khi compile thành bytecode thì đã rất p
 Nhưng thật sự tác giả của họ hơi "lười" vì có vài bug ở issue mà không chịu fix
 với pycdc thì chúng ta sẽ được support python3.10 trở lên , càng update python càng khó dịch hơn
 còn nếu không muốn sử dụng công cụ thì hãy tự tạo cho bản thân một cái mini cơ bản bằng cách syntax từng opcode một
-Dưới đây là một mini pyc decompile bởi me, syntax cho từng opcode và dịch ra
+Dưới đây là một mini pyc decompile bởi me sử dụng vm để thực thi, syntax cho từng opcode và dịch ra
 
 ```python
 
@@ -266,6 +266,7 @@ print('hello')
 
 
 
+# SỬ DỤng AST để  obf code
 Tiếp theo là AST , một module tuyệt vời để write ra python obf
 
 Bước đầu là tạo cây bằng AST
