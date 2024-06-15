@@ -11,7 +11,7 @@
 - [BUILTINS FUNCTION](#builtins-function)
 - [PYTHON BYTECODE](#python-bytecode)
 - [SỬ DỤNG AST ĐỂ TẠO OBF CODE](#sử-dụng-ast-để-tạo-obf-code)
-- 
+- [TƯ DUY VỀ OBF ,DEOBF] 
 ## BUILTINS FUNCTION
 Đầu tiên là bước khởi đầu cho một xáo trộn cơ bản , khá là dễ khi bạn làm và sử dụng , dễ fix bug nhưng tính bảo mật thì ...
 ```python
@@ -1105,3 +1105,439 @@ except MemoryError:
 ```
 
 Thật tuyệt vời phải không ạ? Không quá khó mà lại rất mạnh, thời gian debug còn lâu hơn thời gian write nữa :)
+
+## TƯ DUY VỀ OBF ,DEOBF
+Đây là cái phần cần động não cực kì, bởi lẽ nếu không có thì việc làm obf cũng hơi cực 
+Như ở phần builtins function thì mình đã giới thiệu qua về cơ thế hooking, tức là mọi hàm builtins đều bị hook cả
+Thông thường thì sẽ làm một cái anti để check xem có hàm nào đấy bị rewrite không thì sẽ block
+Ví dụ về exec
+```py
+type(exec) = <class 'builtin_function_or_method'>
+```
+nếu như mình rewrite cái hàm này thì cái type của nó sẽ bị thay đổi
+```
+c = exec
+def h(x):
+    v = c(x)
+    print(x)
+    return v
+exec = h
+
+```
+bây giờ `print(type(exec)`
+thì nó ra `<class 'function'>`
+
+như vậy chúng ta tạo được một cái anti đầu tiên
+```py
+if str(type(exec)) != "<class 'builtin_function_or_method'>":
+    raise MemoryError("Phát hiện hook")
+```
+về raise thì chúng ta không thể bypass được vì nó là keyword, chúng ta phải làm sao cho cái anti khi check thì nó không ra được 
+với code trên thì bypass cực kì dễ
+```py
+c = exec
+def h(x):
+    v = c(x)
+    print(x)
+    return v
+exec = h
+
+def type(x):
+        return "<class 'builtin_function_or_method'>"
+
+
+if str(type(exec)) != "<class 'builtin_function_or_method'>":
+    raise MemoryError("Detect hook")
+```
+>>> 5
+```py
+c = exec
+def h(x):
+    v = c(x)
+    print(x)
+    return v
+exec = h
+
+if str(type(exec)) != "<class 'builtin_function_or_method'>":
+    raise MemoryError("Detect hook")
+exec("print(5)")
+```
+>>> MemoryError: Detect hook
+
+Tới đây rồi thì bạn có nghĩ là chỉ việc xóa cái chỗ anti đi là được đúng không? , không , không đơn giản như vậy vì thường anti sẽ được nhét vào trong marshal và chúng ta phải bắt buộc phải đọc dis 
+```py
+  0           0 RESUME                   0
+
+  1           2 LOAD_NAME                0 (exec)
+              4 STORE_NAME               1 (c)
+
+  2           6 LOAD_CONST               0 (<code object h at 0x0000026214A1AE30, file "v", line 2>)
+              8 MAKE_FUNCTION            0
+             10 STORE_NAME               2 (h)
+
+  6          12 LOAD_NAME                2 (h)
+             14 STORE_NAME               0 (exec)
+
+ 12          16 PUSH_NULL
+             18 LOAD_NAME                3 (str)
+             20 PUSH_NULL
+             22 LOAD_NAME                4 (type)
+             24 LOAD_NAME                0 (exec)
+             26 PRECALL                  1
+             30 CALL                     1
+             40 PRECALL                  1
+             44 CALL                     1
+             54 LOAD_CONST               1 ("<class 'builtin_function_or_method'>")
+             56 COMPARE_OP               3 (!=)
+             62 POP_JUMP_FORWARD_IF_FALSE    11 (to 86)
+
+ 13          64 PUSH_NULL
+             66 LOAD_NAME                5 (MemoryError)
+             68 LOAD_CONST               2 ('Detect hook')
+             70 PRECALL                  1
+             74 CALL                     1
+             84 RAISE_VARARGS            1
+
+ 15     >>   86 PUSH_NULL
+             88 LOAD_NAME                0 (exec)
+             90 PUSH_NULL
+             92 LOAD_NAME                6 (print)
+             94 LOAD_CONST               3 (5)
+             96 PRECALL                  1
+            100 CALL                     1
+            110 PRECALL                  1
+            114 CALL                     1
+            124 POP_TOP
+            126 LOAD_CONST               4 (None)
+            128 RETURN_VALUE
+
+Disassembly of <code object h at 0x0000026214A1AE30, file "v", line 2>:
+  2           0 RESUME                   0
+
+  3           2 LOAD_GLOBAL              1 (NULL + c)
+             14 LOAD_FAST                0 (x)
+             16 PRECALL                  1
+             20 CALL                     1
+             30 STORE_FAST               1 (v)
+
+  4          32 LOAD_GLOBAL              3 (NULL + print)
+             44 LOAD_FAST                0 (x)
+             46 PRECALL                  1
+             50 CALL                     1
+             60 POP_TOP
+
+  5          62 LOAD_FAST                1 (v)
+             64 RETURN_VALUE
+```
+
+Với pyc thì chúng ta không thể edit trực tiếp mà phải qua các công cụ decompile như `pycdc` nah dù họ lười fix bug thật sự và thiếu nhiều opcode (hứa hẹn tương lai tôi sẽ write một cái pyc decompile và share lên) đó là lý tại sao sinh ra code bypass để nhắm tới một hàm builtins nào đó trong python
+Bây giờ
+Mình sẽ thử deobf code này chỉ bằng cách hooking exec
+```py
+__builtins__.__dict__[''.join(["c","e","x","e"][::-1])](")'olleh'(tnirp"[::-1])
+```
+>>> hello
+
+mình đã thực hiện che giấu đi exec bằng string rồi nhé và đảo ngược cả chuỗi nhưng chúng ta phải hiểu là nó gọi hàm exec thì
+```py
+c = exec
+def h(x):
+    print(x)
+    v = c(x)
+    return v
+exec = h
+__import__("builtins").exec = h
+__builtins__.__dict__[''.join(["c","e","x","e"][::-1])](")'olleh'(tnirp"[::-1])
+```
+
+>>> "print('hello')"
+
+Đó là top 1 các lý do bạn không dùng obf có exec hoặc eval (trừ khi đó là marshal bởi vì nó là bytecode)
+
+Mình sẽ không đi quá sâu vào anti vì đơn giản là nó rất mệt , căn bản thì cái nào cũng bypass được nếu đúng điều kiện
+Mình sẽ chỉ share những cái kết hợp để nốc out đối thủ 
+Raise
+```py
+if <điều kiện> == False : raise MemoryError ("Đòi Hook à")
+```
+Hoặc Tràn ram (cực kì khốn nạn)
+```py
+if <điều kiện> == False : deptrai = [[0]*10**9]
+```
+Chỉ cần bạn biết cách check thôi là khiến đối thủ khó chịu rồi
+
+Bây giờ là phần cách tạo ra một cái obf mà khiến người khác nản và rất lười để deobf lại
+Đó chính là kết hợp ast và marshal lại
+
+Hãy xem đây là khi kết hợp và kết quả cho ra dis của nó
+```py
+source = """
+try:
+    if False is True:
+        pass
+    else:
+        pass
+    raise MemoryError('Ngocuyencoder')
+except MemoryError:
+    try:
+        if False is True:
+            pass
+        else:
+            pass
+        raise MemoryError((lambda _0x7359: 'N' + 'g' + 'o' + 'c' + 'u' + 'y' + 'e' + 'n' + 'c' + 'o' + 'd' + 'e' + 'r')('_0x7359'))
+    except MemoryError:
+        print((lambda _0x7359: (lambda _0x7359: 'h')('_0x7359') + (lambda _0x7359: 'e')('_0x7359') + (lambda _0x7359: 'l')('_0x7359') + (lambda _0x7359: 'l')('_0x7359') + (lambda _0x7359: 'o')('_0x7359') + (lambda _0x7359: ' ')('_0x7359') + (lambda _0x7359: 'w')('_0x7359') + (lambda _0x7359: 'o')('_0x7359') + (lambda _0x7359: 'r')('_0x7359') + (lambda _0x7359: 'l')('_0x7359') + (lambda _0x7359: 'd')('_0x7359'))((lambda _0x7359: '_' + '0' + 'x' + '7' + '3' + '5' + '9')('_0x7359')))
+"""
+import marshal
+x = marshal.dumps(compile(source,"ngocuyen.py","exec")
+```
+>>> b'c\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\t\x00\x00\x00\x00\x00\x00\x00\xf3\xc8\x00\x00\x00\x97\x00\t\x00d\x0.....
+
+sau khi dis nó ra thì 
+```py
+  0           0 RESUME                   0
+
+  2           2 NOP
+
+  3           4 LOAD_CONST               0 (False)
+              6 LOAD_CONST               1 (True)
+              8 IS_OP                    0
+             10 POP_JUMP_FORWARD_IF_FALSE     1 (to 14)
+
+  4          12 JUMP_FORWARD             1 (to 16)
+
+  6     >>   14 NOP
+
+  7     >>   16 PUSH_NULL
+             18 LOAD_NAME                0 (MemoryError)
+             20 LOAD_CONST               2 ('Ngocuyencoder')
+             22 PRECALL                  1
+             26 CALL                     1
+             36 RAISE_VARARGS            1
+        >>   38 PUSH_EXC_INFO
+
+  8          40 LOAD_NAME                0 (MemoryError)
+             42 CHECK_EXC_MATCH
+             44 POP_JUMP_FORWARD_IF_FALSE    73 (to 192)
+             46 POP_TOP
+
+  9          48 NOP
+
+ 10          50 LOAD_CONST               0 (False)
+             52 LOAD_CONST               1 (True)
+             54 IS_OP                    0
+             56 POP_JUMP_FORWARD_IF_FALSE     1 (to 60)
+
+ 11          58 JUMP_FORWARD             1 (to 62)
+
+ 13     >>   60 NOP
+
+ 14     >>   62 PUSH_NULL
+             64 LOAD_NAME                0 (MemoryError)
+             66 PUSH_NULL
+             68 LOAD_CONST               3 (<code object <lambda> at 0x0000021F751B16B0, file "ngocuyen.py", line 14>)
+             70 MAKE_FUNCTION            0
+             72 LOAD_CONST               4 ('_0x7359')
+             74 PRECALL                  1
+             78 CALL                     1
+             88 PRECALL                  1
+             92 CALL                     1
+            102 RAISE_VARARGS            1
+        >>  104 PUSH_EXC_INFO
+
+ 15         106 LOAD_NAME                0 (MemoryError)
+            108 CHECK_EXC_MATCH
+            110 POP_JUMP_FORWARD_IF_FALSE    36 (to 184)
+            112 POP_TOP
+
+ 16         114 PUSH_NULL
+            116 LOAD_NAME                1 (print)
+            118 PUSH_NULL
+            120 LOAD_CONST               5 (<code object <lambda> at 0x0000021F74C432D0, file "ngocuyen.py", line 16>)
+            122 MAKE_FUNCTION            0
+            124 PUSH_NULL
+            126 LOAD_CONST               6 (<code object <lambda> at 0x0000021F751B1FB0, file "ngocuyen.py", line 16>)
+            128 MAKE_FUNCTION            0
+            130 LOAD_CONST               4 ('_0x7359')
+            132 PRECALL                  1
+            136 CALL                     1
+            146 PRECALL                  1
+            150 CALL                     1
+            160 PRECALL                  1
+            164 CALL                     1
+            174 POP_TOP
+            176 POP_EXCEPT
+            178 POP_EXCEPT
+            180 LOAD_CONST               7 (None)
+            182 RETURN_VALUE
+
+ 15     >>  184 RERAISE                  0
+        >>  186 COPY                     3
+            188 POP_EXCEPT
+            190 RERAISE                  1
+
+  8     >>  192 RERAISE                  0
+        >>  194 COPY                     3
+            196 POP_EXCEPT
+            198 RERAISE                  1
+ExceptionTable:
+  4 to 36 -> 38 [0]
+  38 to 46 -> 194 [1] lasti
+  50 to 102 -> 104 [1]
+  104 to 174 -> 186 [2] lasti
+  176 to 176 -> 194 [1] lasti
+  184 to 184 -> 186 [2] lasti
+  186 to 192 -> 194 [1] lasti
+
+Disassembly of <code object <lambda> at 0x0000021F751B16B0, file "ngocuyen.py", line 14>:
+ 14           0 RESUME                   0
+              2 LOAD_CONST               1 ('Ngocuyencoder')
+              4 RETURN_VALUE
+
+Disassembly of <code object <lambda> at 0x0000021F74C432D0, file "ngocuyen.py", line 16>:
+ 16           0 RESUME                   0
+              2 PUSH_NULL
+              4 LOAD_CONST               1 (<code object <lambda> at 0x0000021F751B1770, file "ngocuyen.py", line 16>)
+              6 MAKE_FUNCTION            0
+              8 LOAD_CONST               2 ('_0x7359')
+             10 PRECALL                  1
+             14 CALL                     1
+             24 PUSH_NULL
+             26 LOAD_CONST               3 (<code object <lambda> at 0x0000021F751B1830, file "ngocuyen.py", line 16>)
+             28 MAKE_FUNCTION            0
+             30 LOAD_CONST               2 ('_0x7359')
+             32 PRECALL                  1
+             36 CALL                     1
+             46 BINARY_OP                0 (+)
+             50 PUSH_NULL
+             52 LOAD_CONST               4 (<code object <lambda> at 0x0000021F751B18F0, file "ngocuyen.py", line 16>)
+             54 MAKE_FUNCTION            0
+             56 LOAD_CONST               2 ('_0x7359')
+             58 PRECALL                  1
+             62 CALL                     1
+             72 BINARY_OP                0 (+)
+             76 PUSH_NULL
+             78 LOAD_CONST               5 (<code object <lambda> at 0x0000021F751B19B0, file "ngocuyen.py", line 16>)
+             80 MAKE_FUNCTION            0
+             82 LOAD_CONST               2 ('_0x7359')
+             84 PRECALL                  1
+             88 CALL                     1
+             98 BINARY_OP                0 (+)
+            102 PUSH_NULL
+            104 LOAD_CONST               6 (<code object <lambda> at 0x0000021F751B1A70, file "ngocuyen.py", line 16>)
+            106 MAKE_FUNCTION            0
+            108 LOAD_CONST               2 ('_0x7359')
+            110 PRECALL                  1
+            114 CALL                     1
+            124 BINARY_OP                0 (+)
+            128 PUSH_NULL
+            130 LOAD_CONST               7 (<code object <lambda> at 0x0000021F751B1B30, file "ngocuyen.py", line 16>)
+            132 MAKE_FUNCTION            0
+            134 LOAD_CONST               2 ('_0x7359')
+            136 PRECALL                  1
+            140 CALL                     1
+            150 BINARY_OP                0 (+)
+            154 PUSH_NULL
+            156 LOAD_CONST               8 (<code object <lambda> at 0x0000021F751B1BF0, file "ngocuyen.py", line 16>)
+            158 MAKE_FUNCTION            0
+            160 LOAD_CONST               2 ('_0x7359')
+            162 PRECALL                  1
+            166 CALL                     1
+            176 BINARY_OP                0 (+)
+            180 PUSH_NULL
+            182 LOAD_CONST               9 (<code object <lambda> at 0x0000021F751B1CB0, file "ngocuyen.py", line 16>)
+            184 MAKE_FUNCTION            0
+            186 LOAD_CONST               2 ('_0x7359')
+            188 PRECALL                  1
+            192 CALL                     1
+            202 BINARY_OP                0 (+)
+            206 PUSH_NULL
+            208 LOAD_CONST              10 (<code object <lambda> at 0x0000021F751B1D70, file "ngocuyen.py", line 16>)
+            210 MAKE_FUNCTION            0
+            212 LOAD_CONST               2 ('_0x7359')
+            214 PRECALL                  1
+            218 CALL                     1
+            228 BINARY_OP                0 (+)
+            232 PUSH_NULL
+            234 LOAD_CONST              11 (<code object <lambda> at 0x0000021F751B1E30, file "ngocuyen.py", line 16>)
+            236 MAKE_FUNCTION            0
+            238 LOAD_CONST               2 ('_0x7359')
+            240 PRECALL                  1
+            244 CALL                     1
+            254 BINARY_OP                0 (+)
+            258 PUSH_NULL
+            260 LOAD_CONST              12 (<code object <lambda> at 0x0000021F751B1EF0, file "ngocuyen.py", line 16>)
+            262 MAKE_FUNCTION            0
+            264 LOAD_CONST               2 ('_0x7359')
+            266 PRECALL                  1
+            270 CALL                     1
+            280 BINARY_OP                0 (+)
+            284 RETURN_VALUE
+
+Disassembly of <code object <lambda> at 0x0000021F751B1770, file "ngocuyen.py", line 16>:
+ 16           0 RESUME                   0
+              2 LOAD_CONST               1 ('h')
+              4 RETURN_VALUE
+
+Disassembly of <code object <lambda> at 0x0000021F751B1830, file "ngocuyen.py", line 16>:
+ 16           0 RESUME                   0
+              2 LOAD_CONST               1 ('e')
+              4 RETURN_VALUE
+
+Disassembly of <code object <lambda> at 0x0000021F751B18F0, file "ngocuyen.py", line 16>:
+ 16           0 RESUME                   0
+              2 LOAD_CONST               1 ('l')
+              4 RETURN_VALUE
+
+Disassembly of <code object <lambda> at 0x0000021F751B19B0, file "ngocuyen.py", line 16>:
+ 16           0 RESUME                   0
+              2 LOAD_CONST               1 ('l')
+              4 RETURN_VALUE
+
+Disassembly of <code object <lambda> at 0x0000021F751B1A70, file "ngocuyen.py", line 16>:
+ 16           0 RESUME                   0
+              2 LOAD_CONST               1 ('o')
+              4 RETURN_VALUE
+
+Disassembly of <code object <lambda> at 0x0000021F751B1B30, file "ngocuyen.py", line 16>:
+ 16           0 RESUME                   0
+              2 LOAD_CONST               1 (' ')
+              4 RETURN_VALUE
+
+Disassembly of <code object <lambda> at 0x0000021F751B1BF0, file "ngocuyen.py", line 16>:
+ 16           0 RESUME                   0
+              2 LOAD_CONST               1 ('w')
+              4 RETURN_VALUE
+
+Disassembly of <code object <lambda> at 0x0000021F751B1CB0, file "ngocuyen.py", line 16>:
+ 16           0 RESUME                   0
+              2 LOAD_CONST               1 ('o')
+              4 RETURN_VALUE
+
+Disassembly of <code object <lambda> at 0x0000021F751B1D70, file "ngocuyen.py", line 16>:
+ 16           0 RESUME                   0
+              2 LOAD_CONST               1 ('r')
+              4 RETURN_VALUE
+
+Disassembly of <code object <lambda> at 0x0000021F751B1E30, file "ngocuyen.py", line 16>:
+ 16           0 RESUME                   0
+              2 LOAD_CONST               1 ('l')
+              4 RETURN_VALUE
+
+Disassembly of <code object <lambda> at 0x0000021F751B1EF0, file "ngocuyen.py", line 16>:
+ 16           0 RESUME                   0
+              2 LOAD_CONST               1 ('d')
+              4 RETURN_VALUE
+
+Disassembly of <code object <lambda> at 0x0000021F751B1FB0, file "ngocuyen.py", line 16>:
+ 16           0 RESUME                   0
+              2 LOAD_CONST               1 ('_0x7359')
+              4 RETURN_VALUE
+```
+Yes đây chính xác là những gì đối thủ của bạn cần dịch ngược lại về, cảm giác vừa phải dịch đống bytecode lại còn phải syntax lại :)
+Đó là lý do tại sao ở Việt Nam đa số khi làm obf (không tính convert sang exe elf vân vân) thì sẽ sử dụng cách này vì nó thông dụng , dễ làm dễ trúng thưởng , dần dần thì các công cụ decompile pyc lại lỗi nên là vẫn được áp dụng nhiều (kể cả tôi)
+
+Tuy rằng nó không thực sự an toàn bởi vì nó đã có bộ dis của riêng nó rồi, nếu như đủ kĩ năng thì dùng AST để compile thành 1 bytecode custom rồi tự tạo vm bytecode chạy , khi đó kết hợp với obf thì nó là một cái gì đấy rất mạnh nhưng để làm thì... Mình chưa có tìm hiểu
+
+
+
