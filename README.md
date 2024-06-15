@@ -11,7 +11,8 @@
 - [BUILTINS FUNCTION](#builtins-function)
 - [PYTHON BYTECODE](#python-bytecode)
 - [SỬ DỤNG AST ĐỂ TẠO OBF CODE](#sử-dụng-ast-để-tạo-obf-code)
-- [TƯ DUY VỀ OBF ,DEOBF] 
+- [TƯ DUY VỀ OBF ,DEOBF](#gi-do-khong-biet)
+- [HÀNH TRÌNH THAM GIA VÀO MẢNG NÀY CỦA NGOCUYENCODER](#Idk)
 ## BUILTINS FUNCTION
 Đầu tiên là bước khởi đầu cho một xáo trộn cơ bản , khá là dễ khi bạn làm và sử dụng , dễ fix bug nhưng tính bảo mật thì ...
 ```python
@@ -718,8 +719,8 @@ print(j)
        - `type=ast.Name(id='MemoryError', ctx=ast.Load())`: Thêm `MemoryError`.
        - `name=None` Có thể thay bằng cái bạn thích ví dụ là `name="NgocUYENCUTEVL` sẽ là `MemoryError` as `NgocUYENCUTEVL`
        - `body=[j]`: Thực thi câu lệnh ban đầu trong khối `except`.
-     - `orelse=[]`: Để trống vì tôi không thêm else 
-     - `finalbody=[]`: Để trống vì tôi không thêm finally
+     - `orelse=[]`: Để trống vì mình không thêm else 
+     - `finalbody=[]`: Để trống vì mình không thêm finally
 
 **Thêm `raise`**:
    - `j.body.append(ast.Raise(...))` thêm một câu lệnh `raise` vào trong `except`:
@@ -1230,7 +1231,7 @@ Disassembly of <code object h at 0x0000026214A1AE30, file "v", line 2>:
              64 RETURN_VALUE
 ```
 
-Với pyc thì chúng ta không thể edit trực tiếp mà phải qua các công cụ decompile như `pycdc` nah dù họ lười fix bug thật sự và thiếu nhiều opcode (hứa hẹn tương lai tôi sẽ write một cái pyc decompile và share lên) đó là lý tại sao sinh ra code bypass để nhắm tới một hàm builtins nào đó trong python
+Với pyc thì chúng ta không thể edit trực tiếp mà phải qua các công cụ decompile như `pycdc` nah dù họ lười fix bug thật sự và thiếu nhiều opcode (hứa hẹn tương lai mình sẽ write một cái pyc decompile và share lên) đó là lý tại sao sinh ra code bypass để nhắm tới một hàm builtins nào đó trong python
 Bây giờ
 Mình sẽ thử deobf code này chỉ bằng cách hooking exec
 ```py
@@ -1535,9 +1536,58 @@ Disassembly of <code object <lambda> at 0x0000021F751B1FB0, file "ngocuyen.py", 
               4 RETURN_VALUE
 ```
 Yes đây chính xác là những gì đối thủ của bạn cần dịch ngược lại về, cảm giác vừa phải dịch đống bytecode lại còn phải syntax lại :)
-Đó là lý do tại sao ở Việt Nam đa số khi làm obf (không tính convert sang exe elf vân vân) thì sẽ sử dụng cách này vì nó thông dụng , dễ làm dễ trúng thưởng , dần dần thì các công cụ decompile pyc lại lỗi nên là vẫn được áp dụng nhiều (kể cả tôi)
+Vẫn có thể lấy được source của các hàm bằng hook nhưng còn keyword thì chắc chắn phải decompile pyc ra mới được
 
-Tuy rằng nó không thực sự an toàn bởi vì nó đã có bộ dis của riêng nó rồi, nếu như đủ kĩ năng thì dùng AST để compile thành 1 bytecode custom rồi tự tạo vm bytecode chạy , khi đó kết hợp với obf thì nó là một cái gì đấy rất mạnh nhưng để làm thì... Mình chưa có tìm hiểu
+Đó là lý do tại sao ở Việt Nam đa số khi làm obf (không tính convert sang exe elf vân vân) thì sẽ sử dụng cách này vì nó thông dụng , dễ làm dễ trúng thưởng , dần dần thì các công cụ decompile pyc lại lỗi nên là vẫn được áp dụng nhiều (kể cả mình)
+
+PART NÀY VẪN CÒN NHÉ CÁC BÁC EM BỔ SUNG SAU  GIỜ LƯỜI QUÁ + )))
+
+# HÀNH TRÌNH 
+Học cái này ở đâu thì nó là nhân duyên đời mình rồi
+Mình bắt đầu tham gia vào mảng này vào tháng 7 2023
+Cũng không hiểu tại sao mà lại thích tới vậy , chỉ là nhìn mấy cái obf nó rất đẹp kiểu xáo trộn tùm lum trông hay
+Mình đã lên github và mò dần dần , quãng thời gian đi bú code
+Chỉ trong 2 ngày mà đào hết sạch 50 tabs github để mix các obf lại với nhau (Mình vẫn nhớ tên được hết nếu nó được up lên github)
+Từ đấy mình bắt đầu đâm đầu vào mix , chế các kiểu nó thành đam mê rồi
+Câu hỏi đặt ra là làm sao để test được độ mạnh của obf thì chân thành gửi lời cảm ơn tới KhanhNguyen9872 với 2 repo:
+> https://github.com/KhanhNguyen9872/kramer-specter_deobf
+> https://github.com/KhanhNguyen9872/dump_marshal_py
+Trong đây có cái gì thì nó là tool để deobf , nah rất hữu dụng để test mọi loại obf (trừ ast)
+Sau khi mình làm đi làm lại gần 2 tháng với số lần sử dụng 2 tool này thì mình đã nhận ra một cách làm khó đối thủ bằng spam và compile marshal
+Cách thực hiện thì đơn giản thôi
+Cứ spam tất cả những gì có trong bộ não của bạn rồi compile lại là tự dưng người khác lười, thực sự lười để deobf ra vì nhìn đống dis toàn ...
+2 tháng sau tới tháng 11 thì mình vẫn tiếp tục spam nhưng rồi nghĩ lại không hợp lí tí nào cả , cứ spam như vậy thì tới bao giờ mới làm ra hồn được một cái obf 
+Cái tự dưng mình vào được nhóm của tây lông khi lang thang trên github và chỉ 1 tháng sau mình đã claim được kiến thức về
+
+> Hooking
+> Bytecode (VM)
+> Ast Work
+
+Tức là từ trước là bản thân chỉ là thằng bú code thôi , về sau mới được thông não và trở thành như bây giờ
+Cảm ơn mấy anh tây mà mình mất discord rồi không tìm được mấy ảnh nữa 
+
+
+Có nhiều thứ giác ngộ , mình bắt đầu phá đảo python bằng hook =)))))))
+Vầng ấy ạ là khai thác hàm , Mình hook input của thằng khác và thay tên thành tên của mình mà không cần decode ra , trò này cực kì vui
+Thì bắt đầu mình đi làm quen và làm quen được bạn và sau này đã build project Velimatix với mình tên Minh Nguyễn
+
+Mình bắt đầu chia sẻ cho bạn ấy về kiến thức của mình (nhiều lắm đó) và bắt đầu bọn mình hợp tác làm obf với nhau
+
+Lúc đầu là bạn ấy làm anti và mình sẽ là người bypass để kiểm tra tính bảo mật
+
+Về sau này mình lười quá đâm ra mình cho riêng bạn ấy làm tầm 1 tháng gì đó tại mình cũng lười 
+
+Thời gian trôi qua 3,4 tháng của đầu năm 2024 thì mình chả làm gì cả, tức là 3,4 tháng đó mình ngồi chơi
+
+và 2 tháng 5 , 6 quay trở lại đây là mình với bạn Minh Nguyễn khởi động lại làm obf với nhau
+
+Bọn mình chia nhau ra là 
+Mình sẽ ra mấy cái ý tưởng độc lạ cho obf nó hay hơn (đưa cách làm)
+Minh Nguyễn sẽ là người thực hiện những ý tưởng đó
+
+Hai thằng bù đắp cho nhau để đi lên cùng nhau
+
+Nah chỉ vậy thôi , hành trình 1 năm tóm tắt trong 50 dòng , Thank u vì đã đọc docs này nha
 
 
 
