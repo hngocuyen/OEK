@@ -10,7 +10,7 @@
 
 - [BUILTINS FUNCTION](#builtins-function)
 - [PYTHON BYTECODE](#python-bytecode)
-- 
+- [SỬ DỤNG AST ĐỂ TẠO OBF CODE](#sử-dụng-ast-để--obf-code)
 ## BUILTINS FUNCTION
 Đầu tiên là bước khởi đầu cho một xáo trộn cơ bản , khá là dễ khi bạn làm và sử dụng , dễ fix bug nhưng tính bảo mật thì ...
 ```python
@@ -266,7 +266,7 @@ print('hello')
 
 
 
-# SỬ DỤng AST để  obf code
+# SỬ DỤNG AST ĐỂ TẠO OBF CODE
 Tiếp theo là AST , một module tuyệt vời để write ra python obf
 
 Bước đầu là tạo cây bằng AST
