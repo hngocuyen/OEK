@@ -16,7 +16,7 @@
 - [PYTHON BYTECODE](#python-bytecode)
 - [SỬ DỤNG AST ĐỂ TẠO OBF CODE](#sử-dụng-ast-để-tạo-obf-code)
 - [TƯ DUY VỀ OBF ,DEOBF](#tư-duy-về-obf-deobf)
-- [HÀNH TRÌNH THAM GIA VÀO MẢNG NÀY CỦA NGOCUYENCODER](#hành-trình)
+- [NHỮNG NGƯỜI ĐÃ GIÚP MÌNH TRONG THỜI GIAN THAM GIA MẢNG NÀY](#hành-trình)
 ## BUILTINS FUNCTION
 Đầu tiên là bước khởi đầu cho một xáo trộn cơ bản , khá là dễ khi bạn làm và sử dụng , dễ fix bug nhưng tính bảo mật thì ...
 ```python
@@ -1546,57 +1546,14 @@ Vẫn có thể lấy được source của các hàm bằng hook nhưng còn ke
 
 PART NÀY VẪN CÒN NHÉ CÁC BÁC EM BỔ SUNG SAU  GIỜ LƯỜI QUÁ + )))
 
-# HÀNH TRÌNH 
-Học cái này ở đâu thì nó là nhân duyên đời mình rồi
-Mình bắt đầu tham gia vào mảng này vào tháng 7 2023
-Cũng không hiểu tại sao mà lại thích tới vậy , chỉ là nhìn mấy cái obf nó rất đẹp kiểu xáo trộn tùm lum trông hay
-Mình đã lên github và mò dần dần , quãng thời gian đi bú code
-Chỉ trong 2 ngày mà đào hết sạch 50 tabs github để mix các obf lại với nhau (Mình vẫn nhớ tên được hết nếu nó được up lên github)
-Từ đấy mình bắt đầu đâm đầu vào mix , chế các kiểu nó thành đam mê rồi
-Câu hỏi đặt ra là làm sao để test được độ mạnh của obf thì chân thành gửi lời cảm ơn tới KhanhNguyen9872 với 2 repo:
-
-> https://github.com/KhanhNguyen9872/kramer-specter_deobf
-> https://github.com/KhanhNguyen9872/dump_marshal_py
-
-
-Trong đây có cái gì thì nó là tool để deobf , nah rất hữu dụng để test mọi loại obf (trừ ast)
-Sau khi mình làm đi làm lại gần 2 tháng với số lần sử dụng 2 tool này thì mình đã nhận ra một cách làm khó đối thủ bằng spam và compile marshal
-Cách thực hiện thì đơn giản thôi
-Cứ spam tất cả những gì có trong bộ não của bạn rồi compile lại là tự dưng người khác lười, thực sự lười để deobf ra vì nhìn đống dis toàn ...
-2 tháng sau tới tháng 11 thì mình vẫn tiếp tục spam nhưng rồi nghĩ lại không hợp lí tí nào cả , cứ spam như vậy thì tới bao giờ mới làm ra hồn được một cái obf 
-Cái tự dưng mình vào được nhóm của tây lông khi lang thang trên github và chỉ 1 tháng sau mình đã claim được kiến thức về
-
-```
-> Hooking
-> Bytecode (VM)
-> Ast Work
+# THANK
+```py
+Nguyễn Văn Khánh : https://www.facebook.com/khanh10a1 (2 REPO Dec_Kramer Và Dump_Marshal giúp mình test obf)
+Nguyễn Song Hải Anh : https://www.facebook.com/profile.php?id=100087564811660 (Giúp hiểu về bytecode, giúp hiểu như nào mới là obf mạnh)
+Nguyễn Minh : https://www.facebook.com/i.usr.bin.python.NguyenMinh (Cộng tác giúp nhau vượt khó)
 ```
 
-Tức là từ trước là bản thân chỉ là thằng bú code thôi , về sau mới được thông não và trở thành như bây giờ
-Cảm ơn mấy anh tây mà mình mất discord rồi không tìm được mấy ảnh nữa 
 
-
-Có nhiều thứ giác ngộ , mình bắt đầu phá đảo python bằng hook =)))))))
-Vầng ấy ạ là khai thác hàm , Mình hook input của thằng khác và thay tên thành tên của mình mà không cần decode ra , trò này cực kì vui
-Thì bắt đầu mình đi làm quen và làm quen được bạn và sau này đã build project Velimatix với mình tên Minh Nguyễn
-
-Mình bắt đầu chia sẻ cho bạn ấy về kiến thức của mình (nhiều lắm đó) và bắt đầu bọn mình hợp tác làm obf với nhau
-
-Lúc đầu là bạn ấy làm anti và mình sẽ là người bypass để kiểm tra tính bảo mật
-
-Về sau này mình lười quá đâm ra mình cho riêng bạn ấy làm tầm 1 tháng gì đó tại mình cũng lười 
-
-Thời gian trôi qua 3,4 tháng của đầu năm 2024 thì mình chả làm gì cả, tức là 3,4 tháng đó mình ngồi chơi
-
-và 2 tháng 5 , 6 quay trở lại đây là mình với bạn Minh Nguyễn khởi động lại làm obf với nhau
-
-Bọn mình chia nhau ra là 
-Mình sẽ ra mấy cái ý tưởng độc lạ cho obf nó hay hơn (đưa cách làm)
-Minh Nguyễn sẽ là người thực hiện những ý tưởng đó
-
-Hai thằng bù đắp cho nhau để đi lên cùng nhau
-
-Nah chỉ vậy thôi , hành trình 1 năm tóm tắt trong 50 dòng , Thank u vì đã đọc docs này nha
 
 
 
