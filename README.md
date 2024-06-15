@@ -2,10 +2,10 @@
 ## OEK - OBFUSCATION ENGINEERING KNOWLEDGE
 
 
-Xin chào tất cả mọi người tôi là ngocuyencoder
-Hôm trước tôi đã share về project outsource Velimatix
-Bây giờ là tới phần chia sẻ kiến thức (tất cả mọi kiến thức của tôi về mảng này)
-Vốn dĩ ở Việt Nam ít ai chia sẻ kiến thức của bản thân về cái chủ đề này cả (Cảm giác như khá là nhạy cảm)
+- Xin chào tất cả mọi người tôi là ngocuyencoder
+- Hôm trước tôi đã share về project outsource Velimatix
+- Bây giờ là tới phần chia sẻ kiến thức (tất cả mọi kiến thức của tôi về mảng này)
+- Vốn dĩ ở Việt Nam ít ai chia sẻ kiến thức của bản thân về cái chủ đề này cả (Cảm giác như khá là nhạy cảm)
 
 
 Đầu tiên là bước khởi đầu cho một xáo trộn cơ bản , khá là dễ khi bạn làm và sử dụng , dễ fix bug nhưng tính bảo mật thì ...
@@ -257,4 +257,258 @@ hello
 100
 print('hello')
 ```
+
+Để có thể write được một pyc decompile thực sự rất khó nhai, mình syntax từng opcode mà mất tận 5 tiếng để fix bug lmao mà chỉ là mini thôi đấy
+
+
+
+Tiếp theo là AST , một module tuyệt vời để write ra python obf
+
+Bước đầu là tạo cây bằng AST
+```
+import ast
+
+def x(src):
+    tree = ast.parse(src)
+    print(ast.dump(tree, indent=2))
+
+code = """python
+def ngocuyencoder(n):
+    abc = 1 + n
+    print(abc)
+
+print("hello")
+"""
+
+x(code)
+```
+>
+```python
+Module(
+  body=[
+    FunctionDef(
+      name='ngocuyencoder',
+      args=arguments(
+        posonlyargs=[],
+        args=[
+          arg(arg='n')],
+        kwonlyargs=[],
+        kw_defaults=[],
+        defaults=[]),
+      body=[
+        Assign(
+          targets=[
+            Name(id='abc', ctx=Store())],
+          value=BinOp(
+            left=Constant(value=1),
+            op=Add(),
+            right=Name(id='n', ctx=Load()))),
+        Expr(
+          value=Call(
+            func=Name(id='print', ctx=Load()),
+            args=[
+              Name(id='abc', ctx=Load())],
+            keywords=[]))],
+      decorator_list=[]),
+    Expr(
+      value=Call(
+        func=Name(id='print', ctx=Load()),
+        args=[
+          Constant(value='hello')],
+        keywords=[]))],
+  type_ignores=[])
+```
+
+Vậy bây giờ chúng ta có cú pháp rồi thì chúng ta làm cái gì?, cái dễ nhất là OBF STRING thành lambda
+```python
+
+def ngocuyencoder(n):
+    abc = int1 + n
+    print(200 + abc)
+print("hello")
+print(['hello'],["abc"])
+
+```
+=> 
+```python
+def ngocuyencoder(n):
+    abc = int1 + n
+    print(int((lambda: '200')()) + abc)
+print((lambda: 'hello')())
+print([(lambda: 'hello')()], [(lambda: 'abc')()])
+```
+
+Xác định string thuộc ast.Contast, tạo một function để obf nó
+
+```python
+import ast
+# OBF STRING
+def obfstr(v):
+    # Tạo một cái lambda sẵn
+    return f'(lambda : "{v}")()' 
+# BIẾN SỐ NGUYÊN THÀNH STRING ĐỂ OBF
+def obfint(v):
+    return f'int("{v}")' # Trick khá hay về tư duy, khi mình sử dụng int và string , mình chỉ việc obf cái string bên trong int thôi
+# Tạo thêm một hàm mới để thực hiện ast
+def obfuscate(node):
+    for i in ast.walk(node):
+        for f, v in ast.iter_fields(i):
+            if isinstance(v, list):
+                ar = []
+                for j in v:
+                    if isinstance(j, ast.Constant) and isinstance(j.value, str):
+                        ar.append(ast.parse(obfstr(j.value)).body[0].value)
+                    elif isinstance(j, ast.Constant) and isinstance(j.value, int):
+                        ar.append(ast.parse(obfint(j.value)).body[0].value)
+                    elif isinstance(j, ast.AST):
+                        ar.append(j)
+                setattr(i, f, ar)
+            elif isinstance(v, ast.Constant) and isinstance(v.value, str):
+                setattr(i, f, ast.parse(obfstr(v.value)).body[0].value)
+            elif isinstance(v, ast.Constant) and isinstance(v.value, int):
+                setattr(i, f, ast.parse(obfint(v.value)).body[0].value)
+                
+def obf(src):
+    tree = ast.parse(src)
+    obfuscate(tree)
+    return ast.unparse(tree)
+
+code = """
+print(1000)
+print("ngocuyen")
+"""
+
+print(obf(code))
+
+
+```
+Kết quả thu được là
+```python
+print(int('1000'))
+print((lambda: 'ngocuyen')())
+```
+Nếu như ta thay thế `print(obf(code))` thành
+```python
+for i in range(5):
+    code = obf(code)
+```
+Thì kết quả thu được sau khi obf string là
+```python
+print(int((lambda: (lambda: (lambda: (lambda: '1000')())())())()))
+print((lambda: (lambda: (lambda: (lambda: (lambda: 'ngocuyen')())())())())())
+```
+**Nhưng trước tiên là cùng giải thích hàm obfuscate**:
+   - Đối với mỗi (`f`) và giá trị (`v`) trong  (`i`):
+     - Nếu `v` là một danh sách (`isinstance(v, list)`), nó xử lý từng phần tử (`j`) trong danh sách:
+       - Nếu `j` là một constant str (`ast.Constant` với `j.value` là một chuỗi), tôi gọi `obfstr(j.value)` để obf và thay `j` thành (`ast.parse(obfstr(j.value)).body[0].value`).
+       - Nếu `j` là một constant str (`ast.Constant` với `j.value` là một số nguyên), nó gọi `obfint(j.value)` để obf constant số nguyên tương tự.
+       - Nếu `j` là một nút AST khác (`ast.AST`), nó giữ nguyên `j`.
+     - Đặt danh sách đã xử lý `ar` trở lại `f` của `i`.
+   - Nếu `v` là một constant str (`ast.Constant` với `v.value` là một chuỗi), gọi `obfstr(v.value)` và đặt lại `f` của `i`.
+   - Nếu `v` là một constant int (`ast.Constant` với `v.value` là một số nguyên), `gọi obfint(v.value)` và đặt lại `f` của `i`.
+
+Bạn đã hiểu về hàm này rồi thì chúng ta sẽ tới phần làm đẹp cho cái obf của mình , yes , là làm đẹp bởi vì bạn nhìn đống lambda kia thực sự vô hồn , mình hãy thêm tí vị cho nó bằng cách thay đổi hàm `obfint` và `obfstr` 
+Mình sẽ thêm hán tự cho nó nhé
+Ví dụ
+```python 
+import ast
+
+
+randomchar = ''.join(__import__('random').choices([chr(i) for i in range(0x4e00, 0x9fff)], k=4))
+
+def obfstr(v):
+    return f'(lambda {randomchar} : "{v}")("{randomchar}")' 
+
+def obfint(v):
+    return f"int('{v}')"
+def obfuscate(node):
+    for i in ast.walk(node):
+        for f, v in ast.iter_fields(i):
+            if isinstance(v, list):
+                ar = []
+                for j in v:
+                    if isinstance(j, ast.Constant) and isinstance(j.value, str):
+                        ar.append(ast.parse(obfstr(j.value)).body[0].value)
+                    elif isinstance(j, ast.Constant) and isinstance(j.value, int):
+                        ar.append(ast.parse(obfint(j.value)).body[0].value)
+                    elif isinstance(j, ast.AST):
+                        ar.append(j)
+                setattr(i, f, ar)
+            elif isinstance(v, ast.Constant) and isinstance(v.value, str):
+                setattr(i, f, ast.parse(obfstr(v.value)).body[0].value)
+            elif isinstance(v, ast.Constant) and isinstance(v.value, int):
+                setattr(i, f, ast.parse(obfint(v.value)).body[0].value)
+                
+def obf(src):
+    tree = ast.parse(src)
+    obfuscate(tree)
+    return ast.unparse(tree)
+
+code = """
+print(1000)
+print("ngocuyen")
+"""
+
+for i in range(3):
+	code = obf(code)
+print(code)
+
+```
+Kết quả :
+```python
+print(int((lambda 駹穯污揭: (lambda 駹穯污揭: '1000')('駹穯污揭'))((lambda 駹穯污揭: '駹穯污揭')('駹穯污揭'))))
+print((lambda 駹穯污揭: (lambda 駹穯污揭: (lambda 駹穯污揭: 'ngocuyen')('駹穯污揭'))((lambda 駹穯污揭: '駹穯污揭')('駹穯污揭')))((lambda 駹穯污揭: (lambda 駹穯污揭: '駹穯污揭')('駹穯污揭'))((lambda 駹穯污揭: '駹穯污揭')('駹穯污揭'))))
+```
+
+Cũng có thể mix hàm obfstr thành như này 
+```python
+def obfstr(v):
+    tachstring = '+'.join([f'"{c}"' for c in v])
+    return f'(lambda {randomchar} : {tachstring})("{randomchar}")'
+```
+Kết quả :
+```python
+print(int((lambda 骑嫚璹敇: (lambda 骑嫚璹敇: '1')('骑嫚璹敇') + (lambda 骑嫚璹敇: '0')('骑嫚璹敇') + (lambda 骑嫚璹敇: '0')('骑嫚璹敇') + (lambda 骑嫚璹敇: '0')('骑嫚璹敇'))((lambda 骑嫚璹敇: '骑' + '嫚' + '璹' + '敇')('骑嫚璹敇'))))
+print((lambda 骑嫚璹敇: (lambda 骑嫚璹敇: (lambda 骑嫚璹敇: 'n')('骑嫚璹敇'))((lambda 骑嫚璹敇: '骑' + '嫚' + '璹' + '敇')('骑嫚璹敇')) + (lambda 骑嫚璹敇: (lambda 骑嫚璹敇: 'g')('骑嫚璹敇'))((lambda 骑嫚璹敇: '骑' + '嫚' + '璹' + '敇')('骑嫚璹敇')) + (lambda 骑嫚璹敇: (lambda 骑嫚璹敇: 'o')('骑嫚璹敇'))((lambda 骑嫚璹敇: '骑' + '嫚' + '璹' + '敇')('骑嫚璹敇')) + (lambda 骑嫚璹敇: (lambda 骑嫚璹敇: 'c')('骑嫚璹敇'))((lambda 骑嫚璹敇: '骑' + '嫚' + '璹' + '敇')('骑嫚璹敇')) + (lambda 骑嫚璹敇: (lambda 骑嫚璹敇: 'u')('骑嫚璹敇'))((lambda 骑嫚璹敇: '骑' + '嫚' + '璹' + '敇')('骑嫚璹敇')) + (lambda 骑嫚璹敇: (lambda 骑嫚璹敇: 'y')('骑嫚璹敇'))((lambda 骑嫚璹敇: '骑' + '嫚' + '璹' + '敇')('骑嫚璹敇')) + (lambda 骑嫚璹敇: (lambda 骑嫚璹敇: 'e')('骑嫚璹敇'))((lambda 骑嫚璹敇: '骑' + '嫚' + '璹' + '敇')('骑嫚璹敇')) + (lambda 骑嫚璹敇: (lambda 骑嫚璹敇: 'n')('骑嫚璹敇'))((lambda 骑嫚璹敇: '骑' + '嫚' + '璹' + '敇')('骑嫚璹敇')))((lambda 骑嫚璹敇: (lambda 骑嫚璹敇: '骑')('骑嫚璹敇') + (lambda 骑嫚璹敇: '嫚')('骑嫚璹敇') + (lambda 骑嫚璹敇: '璹')('骑嫚璹敇') + (lambda 骑嫚璹敇: '敇')('骑嫚璹敇'))((lambda 骑嫚璹敇: '骑' + '嫚' + '璹' + '敇')('骑嫚璹敇'))))
+```
+Hoặc có thể làm cho nó tây tí là
+```python
+
+randomchar = "_0x"+''.join(__import__('random').choices([str(i) for i in range(1, 10)], k=4))
+
+```
+
+Kết quả :
+```python
+print(int((lambda _0x3327: (lambda _0x3327: '1')('_0x3327') + (lambda _0x3327: '0')('_0x3327') + (lambda _0x3327: '0')('_0x3327') + (lambda _0x3327: '0')('_0x3327'))((lambda _0x3327: '_' + '0' + 'x' + '3' + '3' + '2' + '7')('_0x3327'))))
+print((lambda _0x3327: (lambda _0x3327: (lambda _0x3327: 'n')('_0x3327'))((lambda _0x3327: '_' + '0' + 'x' + '3' + '3' + '2' + '7')('_0x3327')) + (lambda _0x3327: (lambda _0x3327: 'g')('_0x3327'))((lambda _0x3327: '_' + '0' + 'x' + '3' + '3' + '2' + '7')('_0x3327')) + (lambda _0x3327: (lambda _0x3327: 'o')('_0x3327'))((lambda _0x3327: '_' + '0' + 'x' + '3' + '3' + '2' + '7')('_0x3327')) + (lambda _0x3327: (lambda _0x3327: 'c')('_0x3327'))((lambda _0x3327: '_' + '0' + 'x' + '3' + '3' + '2' + '7')('_0x3327')) + (lambda _0x3327: (lambda _0x3327: 'u')('_0x3327'))((lambda _0x3327: '_' + '0' + 'x' + '3' + '3' + '2' + '7')('_0x3327')) + (lambda _0x3327: (lambda _0x3327: 'y')('_0x3327'))((lambda _0x3327: '_' + '0' + 'x' + '3' + '3' + '2' + '7')('_0x3327')) + (lambda _0x3327: (lambda _0x3327: 'e')('_0x3327'))((lambda _0x3327: '_' + '0' + 'x' + '3' + '3' + '2' + '7')('_0x3327')) + (lambda _0x3327: (lambda _0x3327: 'n')('_0x3327'))((lambda _0x3327: '_' + '0' + 'x' + '3' + '3' + '2' + '7')('_0x3327')))((lambda _0x3327: (lambda _0x3327: '_')('_0x3327') + (lambda _0x3327: '0')('_0x3327') + (lambda _0x3327: 'x')('_0x3327') + (lambda _0x3327: '3')('_0x3327') + (lambda _0x3327: '3')('_0x3327') + (lambda _0x3327: '2')('_0x3327') + (lambda _0x3327: '7')('_0x3327'))((lambda _0x3327: '_' + '0' + 'x' + '3' + '3' + '2' + '7')('_0x3327'))))
+```
+
+Nhưng có một vấn đề bất cập đó chính là với f string
+```python
+hello = 5
+print(f"{hello}")
+```
+Kết quả
+```python
+a = int((lambda _0x1788: (lambda _0x1788: '5')('_0x1788'))((lambda _0x1788: '_' + '0' + 'x' + '1' + '7' + '8' + '8')('_0x1788')))
+print(f'{a}')
+```
+Nhưng mình nghĩ như này không thỏa mãn lắm
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
