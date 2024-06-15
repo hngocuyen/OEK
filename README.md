@@ -1566,11 +1566,11 @@ Cứ spam tất cả những gì có trong bộ não của bạn rồi compile l
 2 tháng sau tới tháng 11 thì mình vẫn tiếp tục spam nhưng rồi nghĩ lại không hợp lí tí nào cả , cứ spam như vậy thì tới bao giờ mới làm ra hồn được một cái obf 
 Cái tự dưng mình vào được nhóm của tây lông khi lang thang trên github và chỉ 1 tháng sau mình đã claim được kiến thức về
 
-
+```
 > Hooking
 > Bytecode (VM)
 > Ast Work
-
+```
 
 Tức là từ trước là bản thân chỉ là thằng bú code thôi , về sau mới được thông não và trở thành như bây giờ
 Cảm ơn mấy anh tây mà mình mất discord rồi không tìm được mấy ảnh nữa 
