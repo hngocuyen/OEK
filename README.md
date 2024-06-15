@@ -1554,8 +1554,11 @@ Mình đã lên github và mò dần dần , quãng thời gian đi bú code
 Chỉ trong 2 ngày mà đào hết sạch 50 tabs github để mix các obf lại với nhau (Mình vẫn nhớ tên được hết nếu nó được up lên github)
 Từ đấy mình bắt đầu đâm đầu vào mix , chế các kiểu nó thành đam mê rồi
 Câu hỏi đặt ra là làm sao để test được độ mạnh của obf thì chân thành gửi lời cảm ơn tới KhanhNguyen9872 với 2 repo:
+
 > https://github.com/KhanhNguyen9872/kramer-specter_deobf
 > https://github.com/KhanhNguyen9872/dump_marshal_py
+
+
 Trong đây có cái gì thì nó là tool để deobf , nah rất hữu dụng để test mọi loại obf (trừ ast)
 Sau khi mình làm đi làm lại gần 2 tháng với số lần sử dụng 2 tool này thì mình đã nhận ra một cách làm khó đối thủ bằng spam và compile marshal
 Cách thực hiện thì đơn giản thôi
@@ -1563,9 +1566,11 @@ Cứ spam tất cả những gì có trong bộ não của bạn rồi compile l
 2 tháng sau tới tháng 11 thì mình vẫn tiếp tục spam nhưng rồi nghĩ lại không hợp lí tí nào cả , cứ spam như vậy thì tới bao giờ mới làm ra hồn được một cái obf 
 Cái tự dưng mình vào được nhóm của tây lông khi lang thang trên github và chỉ 1 tháng sau mình đã claim được kiến thức về
 
+
 > Hooking
 > Bytecode (VM)
 > Ast Work
+
 
 Tức là từ trước là bản thân chỉ là thằng bú code thôi , về sau mới được thông não và trở thành như bây giờ
 Cảm ơn mấy anh tây mà mình mất discord rồi không tìm được mấy ảnh nữa 
