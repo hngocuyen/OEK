@@ -8,8 +8,8 @@
 - Vốn dĩ ở Việt Nam ít ai chia sẻ kiến thức của bản thân về cái chủ đề này cả (Cảm giác như khá là nhạy cảm)
 ## Các part
 
-- [BUILTINS FUNCTION](#idk)
-- [PYTHON BYTECODE](#idk1)
+- [BUILTINS FUNCTION](#builtins-function)
+- [PYTHON BYTECODE](#python-bytecode)
 - 
 ## BUILTINS FUNCTION
 Đầu tiên là bước khởi đầu cho một xáo trộn cơ bản , khá là dễ khi bạn làm và sử dụng , dễ fix bug nhưng tính bảo mật thì ...
