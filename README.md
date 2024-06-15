@@ -707,7 +707,7 @@ print(j)
 
 **`ast.Try`**:
    - `ast.Try(...)` tạo ra một node AST đại diện cho khối `try-except`:
-     - `body=[]`: Tạo phần thân của try
+     - `body=[]`: Tạo phần thân của khối này, chúng ta có thể mix nó thêm sau
      - `handlers=[ast.ExceptHandler(...)]`: Chúng ta định nghĩa Exception:
        - `type=ast.Name(id='MemoryError', ctx=ast.Load())`: Thêm `MemoryError`.
        - `name=None` Có thể thay bằng cái bạn thích ví dụ là `name="NgocUYENCUTEVL` sẽ là `MemoryError` as `NgocUYENCUTEVL`
@@ -721,3 +721,197 @@ print(j)
      - `args=[ast.Str(s="Ngocuyencoder")]`: Cung cấp một string tùy chỉnh `"Ngocuyencoder"` khi call `MemoryError`.
      - `cause=NONE`:  kiểu như raise Exception from {cause} đó thường thì là from None  
 
+Cái try catch như trên vừa dễ làm vừa ít bug vả lại còn khá là hiệu quả, nhưng mình thấy thế là chưa đủ nên chúng ta hãy đi tiếp phần if else bằng cách code thêm một function mới
+```py
+def random_if_else():
+    return ast.If(
+        test=ast.Compare(
+            left=ast.Constant(value=False, kind=None),
+            ops=[ast.Is()],
+            comparators=[ast.Constant(value=True, kind=None)]
+        ),
+        body=[
+            ast.Pass()
+        ],
+        orelse=[
+            ast.Pass()
+        ]
+    )
+```
+
+
+
+
+sửa lại def trycatch thành
+```py
+def trycatch(body, loop):
+    ar = [random_if_else()] # Được Rồi giờ chúng ta đã có thuộc tính
+    for x in body:
+        j = x
+        for _ in range(loop):
+            j = ast.Try(
+                body=[],
+                handlers=[ast.ExceptHandler(
+                    type=ast.Name(id='MemoryError', ctx=ast.Load()),
+                    name=None,
+                    body=[j]
+                )],
+                orelse=[],
+                finalbody=[]
+            )
+            j.body.append(ast.Raise(
+                exc=ast.Call(
+                    func=ast.Name(id='MemoryError', ctx=ast.Load()),
+                    args=[ast.Str(s="Ngocuyencoder")],
+                    keywords=[]
+                ),
+                cause=None
+            ))
+        ar.append(j)
+    return ar
+```
+Dưới đây là giải thích  về đoạn mã đã cho:
+
+**AST If Node:**
+   - `ast.If` đại diện cho một câu lệnh `if` trong Abstract Syntax Tree (AST).
+   - Nó cần ba đối số: `test`, `body`, và `orelse`.
+
+**Điều kiện kiểm tra (test condition):**
+   - Đối số `test` là một đối tượng `ast.Compare`, đại diện cho một phép so sánh.
+   - `ast.Compare` cần ba đối số: `left`, `ops`, và `comparators`.
+
+**Toán hạng bên trái (left operand):**
+   - `left` là một đối tượng `ast.Constant` với giá trị `False`.
+   - Điều này đại diện cho phía bên trái của phép so sánh, là hằng số `False`.
+
+**Tạo toán tử so sánh**
+   - `ops` là một danh sách chứa một đối tượng `ast.Lt()`.
+   - `ast.Eq()` đại diện cho toán tử bằng (`<`).
+Các toán tử trong ast
+1. `Eq` (==)
+2. `NotEq` (!=)
+3. `Lt` (<)
+4. `LtE` (<=)
+5. `Gt` (>)
+6. `GtE` (>=)
+7. `Is` (is)
+8. `IsNot` (is not)
+9. `In` (in)
+10. `NotIn` (not in)
+
+
+
+7. **Toán hạng bên phải (right operand):**
+   - `comparators` là một danh sách chứa một đối tượng `ast.Constant` với giá trị `True`.
+   - Điều này đại diện cho phía bên phải của phép so sánh, là hằng số `True`.
+
+8. **Thân if (body):**
+   - `body` là một danh sách chứa một đối tượng `ast.Pass()`.
+   - `ast.Pass` đại diện cho lệnh `pass` trong Python, có nghĩa là không làm gì cả.
+
+9. **Thân else (orelse):**
+   - `orelse` là một danh sách chứa một đối tượng `ast.Pass()`.
+   - Tương tự như trên, điều này đại diện cho lệnh `pass` trong nhánh `else`.
+
+Bây giờ hãy sử dụng nó nào
+Kết quả :
+```py
+print("hello world")
+def hello(x):
+    x = 5
+    print(x)
+hello(10)
+```
+Thành
+```py
+try:
+    if False is True:
+        pass
+    else:
+        pass
+    raise MemoryError('Ngocuyencoder')
+except MemoryError:
+    try:
+        if False is True:
+            pass
+        else:
+            pass
+        raise MemoryError('Ngocuyencoder')
+    except MemoryError:
+        try:
+            if False is True:
+                pass
+            else:
+                pass
+            raise MemoryError('Ngocuyencoder')
+        except MemoryError:
+            try:
+                if False is True:
+                    pass
+                else:
+                    pass
+                raise MemoryError('Ngocuyencoder')
+            except MemoryError:
+                print('hello world')
+try:
+    if False is True:
+        pass
+    else:
+        pass
+    raise MemoryError('Ngocuyencoder')
+except MemoryError:
+    try:
+        if False is True:
+            pass
+        else:
+            pass
+        raise MemoryError('Ngocuyencoder')
+    except MemoryError:
+        try:
+            if False is True:
+                pass
+            else:
+                pass
+            raise MemoryError('Ngocuyencoder')
+        except MemoryError:
+            try:
+                if False is True:
+                    pass
+                else:
+                    pass
+                raise MemoryError('Ngocuyencoder')
+            except MemoryError:
+
+                def hello(x):
+                    x = 5
+                    print(x)
+try:
+    if False is True:
+        pass
+    else:
+        pass
+    raise MemoryError('Ngocuyencoder')
+except MemoryError:
+    try:
+        if False is True:
+            pass
+        else:
+            pass
+        raise MemoryError('Ngocuyencoder')
+    except MemoryError:
+        try:
+            if False is True:
+                pass
+            else:
+                pass
+            raise MemoryError('Ngocuyencoder')
+        except MemoryError:
+            try:
+                if False is True:
+                    pass
+                else:
+                    pass
+                raise MemoryError('Ngocuyencoder')
+            except MemoryError:
+                hello(10)
+```
