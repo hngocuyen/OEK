@@ -1,8 +1,12 @@
-# ngocuyencoder 19/07/2008
-## OEK - OBFUSCATION ENGINEERING KNOWLEDGE
+# OBF DOCS
 
 
 - Xin chào tất cả mọi người mình là ngocuyencoder
+- Date : 19/07/2008
+- Sống tại Quảng Ninh , Việt Nam
+
+
+
 - Hôm trước mình đã share về project outsource Velimatix
 - Bây giờ là tới phần chia sẻ kiến thức (tất cả mọi kiến thức của mình về mảng này)
 - Vốn dĩ ở Việt Nam ít ai chia sẻ kiến thức của bản thân về cái chủ đề này cả (Cảm giác như khá là nhạy cảm)
@@ -11,8 +15,8 @@
 - [BUILTINS FUNCTION](#builtins-function)
 - [PYTHON BYTECODE](#python-bytecode)
 - [SỬ DỤNG AST ĐỂ TẠO OBF CODE](#sử-dụng-ast-để-tạo-obf-code)
-- [TƯ DUY VỀ OBF ,DEOBF](#gi-do-khong-biet)
-- [HÀNH TRÌNH THAM GIA VÀO MẢNG NÀY CỦA NGOCUYENCODER](#Idk)
+- [TƯ DUY VỀ OBF ,DEOBF](#tư-duy-về-obf-deobf)
+- [HÀNH TRÌNH THAM GIA VÀO MẢNG NÀY CỦA NGOCUYENCODER](#hành-trình)
 ## BUILTINS FUNCTION
 Đầu tiên là bước khởi đầu cho một xáo trộn cơ bản , khá là dễ khi bạn làm và sử dụng , dễ fix bug nhưng tính bảo mật thì ...
 ```python
