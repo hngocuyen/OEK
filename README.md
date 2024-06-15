@@ -510,20 +510,22 @@ def fm(node: ast.JoinedStr) -> ast.Call:
     )
 ```
 Cập nhật lại code chúng ta có
+Và tiện thể fix bug với `\n và \r escape` và [True] [False] thì skip va bug với cả "" (Rỗng)
 ```py
 import ast
 
-
-randomchar = "_0x"+''.join(__import__('random').choices([str(i) for i in range(1, 10)], k=4))
+randomchar = "_0x" + ''.join(__import__('random').choices([str(i) for i in range(1, 10)], k=4))
 
 def obfstr(v):
-    tachstring = '+'.join([f'"{c}"' for c in v])
-    return f'(lambda {randomchar} : {tachstring})("{randomchar}")'
-
+    if v == "":
+        return f"''"
+    else:
+        repr_chars = [repr(c) for c in v]
+        tachstring = '+'.join(repr_chars)
+        return f'(lambda {randomchar} : {tachstring})("{randomchar}")'
 
 def obfint(v):
-    return f"int('{v}')"
-
+    return f"{v}"
 
 def fm(node: ast.JoinedStr) -> ast.Call:
     return ast.Call(
@@ -536,7 +538,6 @@ def fm(node: ast.JoinedStr) -> ast.Call:
         keywords=[]
     )
 
-
 def obfuscate(node):
     for i in ast.walk(node):
         for f, v in ast.iter_fields(i):
@@ -548,25 +549,31 @@ def obfuscate(node):
                     elif isinstance(j, ast.Constant) and isinstance(j.value, int):
                         ar.append(ast.parse(obfint(j.value)).body[0].value)
                     elif isinstance(j, ast.JoinedStr):
-                        ar.append(fm(j))  # Format JoinedStr nodes
+                        ar.append(fm(j))
                     elif isinstance(j, ast.AST):
                         ar.append(j)
-                setattr(i, f, ar)
+                if any(isinstance(elem, ast.Constant) and isinstance(elem.value, bool) for elem in v):
+                    setattr(i, f, v)
+                else:
+                    setattr(i, f, ar)
             elif isinstance(v, ast.Constant) and isinstance(v.value, str):
                 setattr(i, f, ast.parse(obfstr(v.value)).body[0].value)
             elif isinstance(v, ast.Constant) and isinstance(v.value, int):
                 setattr(i, f, ast.parse(obfint(v.value)).body[0].value)
             elif isinstance(v, ast.JoinedStr):
                 setattr(i, f, fm(v))
-                
 def obf(src):
     tree = ast.parse(src)
     obfuscate(tree)
     return ast.unparse(tree)
-
-code = """
+code = r"""
 a = 5
 print(f"{a}")
+print("\n")
+print([True])
+print([False])
+def a():return True
+    
 """
 
 for i in range(3):
@@ -577,7 +584,15 @@ Và kết quả là
 ```py
 a = int((lambda _0x8292: (lambda _0x8292: '5')('_0x8292'))((lambda _0x8292: '_' + '0' + 'x' + '8' + '2' + '9' + '2')('_0x8292')))
 print((lambda _0x8292: (lambda _0x8292: '{')('_0x8292') + (lambda _0x8292: '}')('_0x8292'))((lambda _0x8292: '_' + '0' + 'x' + '8' + '2' + '9' + '2')('_0x8292')).format(a))
+print((lambda _0x1744: (lambda _0x1744: (lambda _0x1744: '\n')('_0x1744'))((lambda _0x1744: '_' + '0' + 'x' + '1' + '7' + '4' + '4')('_0x1744')))((lambda _0x1744: (lambda _0x1744: '_')('_0x1744') + (lambda _0x1744: '0')('_0x1744') + (lambda _0x1744: 'x')('_0x1744') + (lambda _0x1744: '1')('_0x1744') + (lambda _0x1744: '7')('_0x1744') + (lambda _0x1744: '4')('_0x1744') + (lambda _0x1744: '4')('_0x1744'))((lambda _0x1744: '_' + '0' + 'x' + '1' + '7' + '4' + '4')('_0x1744'))))
+print([True])
+print([False])
+def a():
+    return True
 ```
+
+
+
 Bạn thấy đây trông nó đã thỏa mãn hơn rồi vậy là chúng ta đã làm xong obf cho string , nó chỉ có vậy thôi
 Tiếp theo là OBF Try-Catch
 ```py
@@ -704,9 +719,5 @@ print(j)
    - `j.body.append(ast.Raise(...))` thêm một câu lệnh `raise` vào trong `except`:
      - `exc=ast.Call(...)`: Gọi để call `MemoryError`.
      - `args=[ast.Str(s="Ngocuyencoder")]`: Cung cấp một string tùy chỉnh `"Ngocuyencoder"` khi call `MemoryError`.
-     - `cause=NONE`:  kiểu như raise Exception from {cause} đó thường thì là from None
-    
-
-
-
+     - `cause=NONE`:  kiểu như raise Exception from {cause} đó thường thì là from None  
 
