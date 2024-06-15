@@ -6,8 +6,12 @@
 - Hôm trước mình đã share về project outsource Velimatix
 - Bây giờ là tới phần chia sẻ kiến thức (tất cả mọi kiến thức của mình về mảng này)
 - Vốn dĩ ở Việt Nam ít ai chia sẻ kiến thức của bản thân về cái chủ đề này cả (Cảm giác như khá là nhạy cảm)
+## Các part
 
-
+- [BUILTINS FUNCTION](#idk)
+- [PYTHON BYTECODE](#idk1)
+- 
+## BUILTINS FUNCTION
 Đầu tiên là bước khởi đầu cho một xáo trộn cơ bản , khá là dễ khi bạn làm và sử dụng , dễ fix bug nhưng tính bảo mật thì ...
 ```python
 > code = "print('hello world')"
@@ -786,7 +790,7 @@ Dưới đây là giải thích  về đoạn mã đã cho:
 
 **Tạo toán tử so sánh**
    - `ops` là một danh sách chứa một đối tượng `ast.Lt()`.
-   - `ast.Eq()` đại diện cho toán tử bằng (`<`).
+   - `ast.Lt()` đại diện cho toán tử bằng (`<`).
 Các toán tử trong ast
 1. `Eq` (==)
 2. `NotEq` (!=)
