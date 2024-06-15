@@ -16,7 +16,7 @@
 - [PYTHON BYTECODE](#python-bytecode)
 - [SỬ DỤNG AST ĐỂ TẠO OBF CODE](#sử-dụng-ast-để-tạo-obf-code)
 - [TƯ DUY VỀ OBF ,DEOBF](#tư-duy-về-obf-deobf)
-- [NHỮNG NGƯỜI ĐÃ GIÚP MÌNH TRONG THỜI GIAN THAM GIA MẢNG NÀY](#hành-trình)
+- [NHỮNG NGƯỜI ĐÃ GIÚP MÌNH TRONG THỜI GIAN THAM GIA MẢNG NÀY](#thank)
 ## BUILTINS FUNCTION
 Đầu tiên là bước khởi đầu cho một xáo trộn cơ bản , khá là dễ khi bạn làm và sử dụng , dễ fix bug nhưng tính bảo mật thì ...
 ```python
@@ -1113,8 +1113,11 @@ Thật tuyệt vời phải không ạ? Không quá khó mà lại rất mạnh,
 
 ## TƯ DUY VỀ OBF ,DEOBF
 Đây là cái phần cần động não cực kì, bởi lẽ nếu không có thì việc làm obf cũng hơi cực 
+
 Như ở phần builtins function thì mình đã giới thiệu qua về cơ thế hooking, tức là mọi hàm builtins đều bị hook cả
+
 Thông thường thì sẽ làm một cái anti để check xem có hàm nào đấy bị rewrite không thì sẽ block
+
 Ví dụ về exec
 ```py
 type(exec) = <class 'builtin_function_or_method'>
@@ -1260,8 +1263,11 @@ __builtins__.__dict__[''.join(["c","e","x","e"][::-1])](")'olleh'(tnirp"[::-1])
 Đó là top 1 các lý do bạn không dùng obf có exec hoặc eval (trừ khi đó là marshal bởi vì nó là bytecode)
 
 Mình sẽ không đi quá sâu vào anti vì đơn giản là nó rất mệt , căn bản thì cái nào cũng bypass được nếu đúng điều kiện
+
 Mình sẽ chỉ share những cái kết hợp để nốc out đối thủ 
+
 Raise
+
 ```py
 if <điều kiện> == False : raise MemoryError ("Đòi Hook à")
 ```
@@ -1272,6 +1278,7 @@ if <điều kiện> == False : deptrai = [[0]*10**9]
 Chỉ cần bạn biết cách check thôi là khiến đối thủ khó chịu rồi
 
 Bây giờ là phần cách tạo ra một cái obf mà khiến người khác nản và rất lười để deobf lại
+
 Đó chính là kết hợp ast và marshal lại
 
 Hãy xem đây là khi kết hợp và kết quả cho ra dis của nó
@@ -1540,6 +1547,7 @@ Disassembly of <code object <lambda> at 0x0000021F751B1FB0, file "ngocuyen.py", 
               4 RETURN_VALUE
 ```
 Yes đây chính xác là những gì đối thủ của bạn cần dịch ngược lại về, cảm giác vừa phải dịch đống bytecode lại còn phải syntax lại :)
+
 Vẫn có thể lấy được source của các hàm bằng hook nhưng còn keyword thì chắc chắn phải decompile pyc ra mới được
 
 Đó là lý do tại sao ở Việt Nam đa số khi làm obf (không tính convert sang exe elf vân vân) thì sẽ sử dụng cách này vì nó thông dụng , dễ làm dễ trúng thưởng , dần dần thì các công cụ decompile pyc lại lỗi nên là vẫn được áp dụng nhiều (kể cả mình)
