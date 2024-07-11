@@ -1,15 +1,7 @@
 # OBF DOCS
 
 
-- Xin chào tất cả mọi người mình là ngocuyencoder
-- Date : 19/07/2008
-- Sống tại Quảng Ninh , Việt Nam
 
-
-
-- Hôm trước mình đã share về project outsource Velimatix
-- Bây giờ là tới phần chia sẻ kiến thức (tất cả mọi kiến thức của mình về mảng này)
-- Vốn dĩ ở Việt Nam ít ai chia sẻ kiến thức của bản thân về cái chủ đề này cả (Cảm giác như khá là nhạy cảm)
 ## Các part
 
 - [BUILTINS FUNCTION](#builtins-function)
